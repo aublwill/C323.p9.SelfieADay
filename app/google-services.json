@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "411940033741",
+    "project_id": "c323p9selfie",
+    "storage_bucket": "c323p9selfie.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:411940033741:android:b9a03226e3c7c1d5f14584",
+        "android_client_info": {
+          "package_name": "com.example.c323p9selfieaday"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBp5M5XuFfS-4UKQBJl0bmmELTSGxVOb5E"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
