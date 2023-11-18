@@ -65,7 +65,7 @@ https://github.com/aublwill/C323.p9.SelfieADay/assets/143005409/3d2dd70f-5e9c-4e
 
 
 ## Notes
-* Everything should work as intended
+* For new photo to show up, screen must be reloaded (by clicking a photo and exiting, or taking another photo)
 
 ## License
 Copyright [2023] [Aubrey Williams]
