@@ -11,10 +11,9 @@ import com.bumptech.glide.request.RequestOptions
 import com.example.c323p9selfieaday.databinding.FragmentPhotoZoomBinding
 
 class PhotoZoomFragment :Fragment(){
-
+    //variables
     private var _binding:FragmentPhotoZoomBinding?=null
     private val binding get() = _binding!!
-
     val viewModel:PhotosViewModel by activityViewModels()
 
     override fun onCreateView(
@@ -22,18 +21,19 @@ class PhotoZoomFragment :Fragment(){
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-
         _binding = FragmentPhotoZoomBinding.inflate(inflater, container, false)
         val view = binding.root
 
+        //creates photo view using Glide
         val photoUrl = PhotoZoomFragmentArgs.fromBundle(requireArguments()).imageUrl
         Glide.with(requireContext())
             .load(photoUrl)
-           // .apply(RequestOptions.overrideOf(400,400))
             .into(binding.zoomImage)
         viewModel.imageUrl = photoUrl
         binding.viewModel = viewModel
         binding.lifecycleOwner = viewLifecycleOwner
+
+        viewModel.onPhotoNav()
 
         return view
     }

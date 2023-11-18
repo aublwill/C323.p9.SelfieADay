@@ -16,17 +16,23 @@ import com.google.firebase.storage.FirebaseStorage
 import kotlin.math.sqrt
 
 class PhotosViewModel:ViewModel() {
+    //shared view model
     val TAG = "PhotosViewModel"
     var signedInUser:User? = null
+
+    //photos variables
     var photo = MutableLiveData<Photo>()
     private val _photos:MutableLiveData<MutableList<Photo>> = MutableLiveData()
     val photos:LiveData<List<Photo>>
         get() = _photos as LiveData<List<Photo>>
 
+    //sensor varibales
     private lateinit var accSensor: MeasurableSensor
     private var accData = floatArrayOf(
         SensorManager.GRAVITY_EARTH, SensorManager.GRAVITY_EARTH, 0.0F
     )
+
+    //shake/accelerometer variables
     private var _shake:MutableLiveData<Boolean> = MutableLiveData(false)
     val shake:LiveData<Boolean>
         get() = _shake
@@ -34,6 +40,11 @@ class PhotosViewModel:ViewModel() {
         _shake.value = false
     }
 
+    /*
+    @param sAcc:MeasurableSensor
+    initializes sensor
+    detects if device was shaken
+     */
     fun initializeSensors(sAcc:MeasurableSensor){
         accSensor = sAcc
         accSensor.startListening()
@@ -54,7 +65,11 @@ class PhotosViewModel:ViewModel() {
     }
 
     val firestoreDb = FirebaseFirestore.getInstance()
-    val storageRef = FirebaseStorage.getInstance().reference
+    /*
+    @no params
+    creates photo based on current values(time, user, url)
+    adds photo to database
+     */
     fun getPhotoUrls(){
         firestoreDb.collection("photos")
             .get()
@@ -76,31 +91,14 @@ class PhotosViewModel:ViewModel() {
     }
 
     /*
-    init {
-        val firebaseStorage = FirebaseFirestore.getInstance()
-        //upload to cloud storage
-        var photosRef = firebaseStorage
-            .collection("photos")
-            .limit(30)
-            .orderBy("creation_time_ms", Query.Direction.DESCENDING)
-        photosRef.addSnapshotListener{snapshot, e ->
-            if (e !=null || snapshot==null){
-                Log.e(TAG, e.toString())
-                return@addSnapshotListener
-            }
-            val photosList = snapshot.toObjects<Photo>()
-            _photos.value = photosList as MutableList<Photo>
-            for (photo in photosList)
-                Log.i(TAG, "Photo ${photo}")
-        }
-
-    }
-
+    @no params
+    signs current user out of app
      */
     fun signOut(){
         FirebaseAuth.getInstance().signOut()
         signedInUser = null
     }
+
     //error
     private val _errorHappened = MutableLiveData<String?>()
     val errorHappened: LiveData<String?>
@@ -116,6 +114,7 @@ class PhotosViewModel:ViewModel() {
     val navigateToSignUp: LiveData<Boolean>
         get() = _navigateToSignUp
 
+    //navigation for photos
     private val _navigateToPhotos = MutableLiveData<Boolean>(false)
     val navigateToPhotos:LiveData<Boolean>
         get() = _navigateToPhotos
@@ -150,21 +149,25 @@ class PhotosViewModel:ViewModel() {
         _navigateToSignIn.value = false
     }
 
-
-
+    //initialize authentication
     var time = ""
     private var auth: FirebaseAuth
     init {
         auth = Firebase.auth
         if (time.trim() == "")
             photo.value = Photo()
-        //_photos.value = mutableListOf<String>()
     }
+
+    //selected photo navigation
     private val _navToPhoto = MutableLiveData<String?>()
     val navToPhoto:LiveData<String?>
         get() = _navToPhoto
     var imageUrl = ""
 
+    /*
+    @param selectedPhoto:Photo
+    makes selected image full screen
+     */
     fun onPhotoClick(selectedPhoto:Photo){
         _navToPhoto.value = selectedPhoto.imageUrl
         imageUrl = selectedPhoto.imageUrl
@@ -175,8 +178,13 @@ class PhotosViewModel:ViewModel() {
     }
 
 
+    //user variables
     var user:User = User()
     var verifyPassword = ""
+    /*
+    @no param
+    signs user into the app
+     */
     fun signIn() {
         if (user.email.isEmpty() || user.password.isEmpty()) {
             _errorHappened.value = "Email and password cannot be empty."
@@ -184,13 +192,16 @@ class PhotosViewModel:ViewModel() {
         }
         auth.signInWithEmailAndPassword(user.email, user.password).addOnCompleteListener {
             if (it.isSuccessful) {
-                //initializeTheDatabaseReference()
                 _navigateToList.value = true
             } else {
                 _errorHappened.value = it.exception?.message
             }
         }
     }
+    /*
+    @no params
+    signs new user up to the app
+     */
     fun signUp() {
         if (user.email.isEmpty() || user.password.isEmpty()) {
             _errorHappened.value = "Email and password cannot be empty."

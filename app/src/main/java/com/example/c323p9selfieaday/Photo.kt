@@ -2,6 +2,7 @@ package com.example.c323p9selfieaday
 
 import com.google.firebase.firestore.PropertyName
 
+//data class for photo item, photo has a name, time, and specific user
 data class Photo(
     @get:PropertyName("image_url")@set:PropertyName("image_url")
     var imageUrl:String = "",

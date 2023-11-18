@@ -37,17 +37,16 @@ import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 
 class TakePhotoFragment :Fragment() {
-    private var uri: Uri? = null
+    //variables
     val TAG = "TakePhotoFragment"
     private var _binding: FragmentTakePhotoBinding? = null
     private val binding get() = _binding!!
     private var imageCapture: ImageCapture? = null
     val viewModel:PhotosViewModel by activityViewModels()
 
-
-
     private lateinit var cameraExecutor: ExecutorService
 
+    //asks for camera permissions
     private val activityResultLauncher =
         registerForActivityResult(
             ActivityResultContracts.RequestMultiplePermissions()
@@ -88,18 +87,30 @@ class TakePhotoFragment :Fragment() {
         // Set up the listeners for take photo button
         binding.imageCaptureButton.setOnClickListener {
             takePhoto()
+            viewModel.onShaked()
+            viewModel.navigateToPhotos()
+            //navigate back to photos after taking new photo
+            viewModel.navigateToPhotos.observe(viewLifecycleOwner, Observer {
+                it?.let {
+                    if (it) {
+                        view.postDelayed({
+                            viewModel.getPhotoUrls()
+                            view.findNavController().navigate(R.id.action_takePhotoFragment_to_photosFragment)
+//                            viewModel.onNavigatedToPhotos()
+                        }, 1000)
+                    }
+                }
+            })
         }
-        viewModel.navigateToPhotos.observe(viewLifecycleOwner, Observer { nav->
-            if (nav) {
-                this.findNavController().navigate(R.id.action_takePhotoFragment_to_photosFragment)
-                viewModel.onNavigatedToPhotos()
-            }
-        })
 
         cameraExecutor = Executors.newSingleThreadExecutor()
         return view
     }
 
+    /*
+    @no param
+    use values to take a new photo
+     */
     private fun takePhoto() {
         // Get a stable reference of the modifiable image capture use case
         val imageCapture = imageCapture ?: return
@@ -114,7 +125,6 @@ class TakePhotoFragment :Fragment() {
                 put(MediaStore.Images.Media.RELATIVE_PATH, "Pictures/CameraX-Image")
             }
         }
-
         // Create output options object which contains file + metadata
         val outputOptions = ImageCapture.OutputFileOptions
             .Builder(
@@ -133,7 +143,6 @@ class TakePhotoFragment :Fragment() {
                 override fun onError(exc: ImageCaptureException) {
                     Log.e(TAG, "Photo capture failed: ${exc.message}", exc)
                 }
-
                 override fun
                         onImageSaved(output: ImageCapture.OutputFileResults) {
                     val savedUri = output.savedUri
@@ -146,20 +155,17 @@ class TakePhotoFragment :Fragment() {
                 }
             }
         )
+
     }
-    fun navToPhotos(){
-        viewModel.navigateToPhotos()
-    }
-    //val storage = Firebase.storage
-    //var storageRef = storage.reference
 
-    //var imagesRef:StorageReference?=storageRef.child("photos")
-
-
-
+    //database/storage
     val firestoreDb = FirebaseFirestore.getInstance()
     val storageRef = FirebaseStorage.getInstance().reference
 
+    /*
+    @param imageUri:Uri
+    saves current photo to firebase and stores in storage
+     */
     private fun saveImageToFirestore(imageUri:Uri){
         val fileName = "image_${System.currentTimeMillis()}.jpg"
         val storageReference = storageRef.child(fileName)
@@ -171,6 +177,10 @@ class TakePhotoFragment :Fragment() {
                 }
             }
     }
+    /*
+    @param imageUrl:String
+    saves current url to database
+     */
     private fun saveUrlToFirestore(imageUrl:String){
         val photoData = hashMapOf(
             "imageUrl" to imageUrl,
@@ -180,47 +190,49 @@ class TakePhotoFragment :Fragment() {
             .add(photoData)
     }
 
+    /*
+    @no params
+    build and show camera
+     */
     private fun startCamera() {
         val cameraProviderFuture = ProcessCameraProvider.getInstance(this.requireContext())
 
         cameraProviderFuture.addListener({
             // Used to bind the lifecycle of cameras to the lifecycle owner
             val cameraProvider: ProcessCameraProvider = cameraProviderFuture.get()
-
             // Preview
             val preview = Preview.Builder()
                 .build()
                 .also {
                     it.setSurfaceProvider(binding.viewFinder.surfaceProvider)
                 }
-
             imageCapture = ImageCapture.Builder()
                 .build()
-
             // Select front camera as a default
             val cameraSelector = CameraSelector.DEFAULT_FRONT_CAMERA
-
             try {
                 // Unbind use cases before rebinding
                 cameraProvider.unbindAll()
-
                 // Bind use cases to camera
                 cameraProvider.bindToLifecycle(
                     this, cameraSelector, preview, imageCapture
                 )
-
             } catch (exc: Exception) {
                 Log.e(TAG, "Use case binding failed", exc)
             }
-
         }, ContextCompat.getMainExecutor(this.requireContext()))
 
     }
 
+    /*
+    @no params
+    requests user for app/camera permissions
+     */
     private fun requestPermissions() {
         activityResultLauncher.launch(REQUIRED_PERMISSIONS)
     }
 
+    //if permissions are all granted
     private fun allPermissionsGranted() = REQUIRED_PERMISSIONS.all {
         ContextCompat.checkSelfPermission(
             this.requireContext(), it
@@ -232,6 +244,7 @@ class TakePhotoFragment :Fragment() {
         cameraExecutor.shutdown()
     }
 
+    //for permissions
     companion object {
         private const val FILENAME_FORMAT = "yyyy-MM-dd-HH-mm-ss-SSS"
         private val REQUIRED_PERMISSIONS =

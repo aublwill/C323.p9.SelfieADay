@@ -17,14 +17,11 @@ import com.google.firebase.storage.FirebaseStorage
 import com.google.firebase.storage.StorageReference
 
 class PhotosFragment : Fragment() {
-    private var uri: Uri? = null
-    val TAG = "PhotosFragment"
-
+    //photos variables
     private var _binding:FragmentPhotosBinding? = null
     private val binding get() = _binding!!
 
-    private lateinit var sensorManager: SensorManager
-
+    //database and storage
     private lateinit var firestoreDb:FirebaseFirestore
     private lateinit var storageRef:StorageReference
 
@@ -33,27 +30,36 @@ class PhotosFragment : Fragment() {
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
+        //binding and view
         _binding = FragmentPhotosBinding.inflate(inflater, container, false)
         val view = binding.root
         val viewModel:PhotosViewModel by activityViewModels()
         binding.viewModel = viewModel
         binding.lifecycleOwner = viewLifecycleOwner
 
+        viewModel.getPhotoUrls()
+        viewModel.onNavigatedToPhotos()//////////////////////////////////////////////
 
+        //initialize accelerometer sensors
         viewModel.initializeSensors(AccelerometerSensor(this.requireContext()))
+        //if shake is detected, navigate to take photo fragment (camera)
         viewModel.shake.observe(viewLifecycleOwner, Observer {
             it?.let {
                 if (it) {
                     view.findNavController()
                         .navigate(R.id.action_photosFragment_to_takePhotoFragment)
                 }
-                viewModel.onShaked()
             }
         })
+        /*
+        @param photo:Photo that was clicked
+         */
         fun photoClick(photo: Photo){
             viewModel.onPhotoClick(photo)
         }
 
+        //navigates to selected photo(photo zoom fragment)
+        //this blows the selected photo into full view/full screen
         viewModel.navToPhoto.observe(viewLifecycleOwner, Observer { url->
             url?.let {
                 val action = PhotosFragmentDirections
@@ -63,15 +69,13 @@ class PhotosFragment : Fragment() {
             }
         })
 
-
+        //database/storage
         firestoreDb = FirebaseFirestore.getInstance()
         storageRef = FirebaseStorage.getInstance().reference
 
-        //val adapter = PhotosAdapter(this.requireContext())//, ::photoClick)
-        //binding.rvPhotos.adapter = adapter
-
+        //update photos/recycler view when new photo is added
         viewModel.photos.observe(viewLifecycleOwner, Observer{photos->
-            val adapter = PhotosAdapter(requireContext())//, ::photoClick)
+            val adapter = PhotosAdapter(requireContext(), ::photoClick)
             adapter.submitList(photos)
             binding.rvPhotos.adapter = adapter
         })
