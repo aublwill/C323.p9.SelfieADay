@@ -2,17 +2,13 @@ package com.example.c323p9selfieaday
 
 import android.hardware.SensorManager
 import android.util.Log
-import android.widget.Toast
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.firestore.Query
-import com.google.firebase.firestore.toObjects
 import com.google.firebase.ktx.Firebase
-import com.google.firebase.storage.FirebaseStorage
 import kotlin.math.sqrt
 
 class PhotosViewModel:ViewModel() {
